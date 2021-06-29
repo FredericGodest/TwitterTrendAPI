@@ -7,6 +7,8 @@ from googletrans import Translator
 import re
 import numpy as np
 import json
+import os
+from dotenv import dotenv_values
 
 translator = Translator()
 

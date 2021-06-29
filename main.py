@@ -2,6 +2,7 @@ import tweet
 from flask import Flask, jsonify, json
 from flask_restful import Resource, Api
 import os
+from dotenv import dotenv_values
 
 app = Flask(__name__)
 api = Api(app)
