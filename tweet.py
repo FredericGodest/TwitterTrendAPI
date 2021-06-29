@@ -22,7 +22,7 @@ def get_auth():
 
     # TEST MOD
     else:
-        call_keys = open("twitterauth", "r").read().splitlines()
+        all_keys = open("twitterauth", "r").read().splitlines()
         auth = tweepy.OAuthHandler(all_keys[0], all_keys[1])
         auth.set_access_token(all_keys[2], all_keys[3])
 
