@@ -1,6 +1,7 @@
 import tweet
 from flask import Flask, jsonify, json
 from flask_restful import Resource, Api
+import os
 
 app = Flask(__name__)
 api = Api(app)
@@ -14,4 +15,7 @@ class GetTweet(Resource):
 api.add_resource(GetTweet, '/<string:hashtag>/<int:nbitem>')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    if os.environ.get("ENV") == "PROD":
+        app.run(debug=False)
+    else:
+        app.run(debug=True)

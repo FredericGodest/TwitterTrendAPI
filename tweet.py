@@ -11,9 +11,21 @@ import json
 translator = Translator()
 
 def get_auth():
-    all_keys = open("twitterauth", "r").read().splitlines()
-    auth = tweepy.OAuthHandler(all_keys[0], all_keys[1])
-    auth.set_access_token(all_keys[2], all_keys[3])
+    # PROD MOD
+    if os.environ.get("ENV") == "PROD":
+        consumer_key = os.environ.get("CONSUMER_KEY")
+        consumer_secret = os.environ.get("CONSUMER_SECRET")
+        access_token = os.environ.get("ACCESS_TOKEN")
+        access_token_secret = os.environ.get("ACCESS_TOKEN_SECRET")
+        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_token_secret)
+
+    # TEST MOD
+    else:
+        call_keys = open("twitterauth", "r").read().splitlines()
+        auth = tweepy.OAuthHandler(all_keys[0], all_keys[1])
+        auth.set_access_token(all_keys[2], all_keys[3])
+
     api = tweepy.API(auth)
 
     return api
