@@ -2,3 +2,7 @@ venv
 test.py
 tweet.json
 twitterauth
+scoreMemory.csv
+word.csv
+test.py
+test2.py

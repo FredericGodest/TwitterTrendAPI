@@ -12,6 +12,7 @@ from dotenv import dotenv_values
 
 translator = Translator()
 
+
 def get_auth():
     # PROD MOD
     if os.environ.get("ENV") == "PROD":
@@ -119,13 +120,39 @@ def get_tweet(word, numberOfItem, api):
 
     return data
 
+def remove_dark(df):
+    file = open("blacklist.txt", "r")
+    List = []
+    for line in file:
+        stripped_line = line.strip()
+        line_list = stripped_line.split()
+        List.append(line_list)
+
+    blackList = []
+    [blackList.append(List[i][0]) for i in range(0, len(List))]
+    blackListExtended = []
+
+    for word in blackList:
+        blackListExtended.append(word)
+        blackListExtended.append(word.upper())
+        blackListExtended.append(word.capitalize())
+
+    for word in blackListExtended:
+        df = df[df["Message"].str.contains(word)==False]
+
+    return df
+
 def toJson(data):
     RT = data["RT Number"].to_numpy()
     FAV = data["Favorite Number"].to_numpy()
     REACTION = RT + FAV
     SCORE = data["Sentiment"].to_numpy()
     data["Reaction"] = REACTION
+
+    data = remove_dark(data)
+
     data = data.sort_values(by='Reaction', ascending=False).head(1)
+
 
     best_account = str(data["Origin"].values[0])
     best_tweet = str(data["Message"].values[0])

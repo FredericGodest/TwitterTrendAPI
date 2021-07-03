@@ -8,12 +8,12 @@ app = Flask(__name__)
 api = Api(app)
 
 class GetTweet(Resource):
-    def get(self, hashtag, nbitem):
-        d = tweet.main("Rouen", nbitem)
+    def get(self, hashtag):
+        d = tweet.main(hashtag, 40)
         d["hashtag"] = "#" + str(hashtag)
         return jsonify(d)
 
-api.add_resource(GetTweet, '/<string:hashtag>/<int:nbitem>')
+api.add_resource(GetTweet, '/<string:hashtag>')
 
 if __name__ == '__main__':
     if os.environ.get("ENV") == "PROD":
