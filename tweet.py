@@ -150,9 +150,10 @@ def toJson(data):
     data["Reaction"] = REACTION
 
     data = remove_dark(data)
-
     data = data.sort_values(by='Reaction', ascending=False).head(1)
 
+    RT = data["RT Number"].to_numpy()
+    FAV = data["Favorite Number"].to_numpy()
 
     best_account = str(data["Origin"].values[0])
     best_tweet = str(data["Message"].values[0])
