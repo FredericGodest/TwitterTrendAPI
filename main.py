@@ -1,10 +1,13 @@
 import tweet
-from flask import Flask, jsonify, json
+from flask import Flask, jsonify
 from flask_restful import Resource, Api
 import os
+from flask_cors import CORS
+
 from dotenv import dotenv_values
 
 app = Flask(__name__)
+CORS(app)
 api = Api(app)
 
 class GetTweet(Resource):
