@@ -9,7 +9,7 @@ api = Api(app)
 
 class GetTweet(Resource):
     def get(self, hashtag):
-        d = tweet.main(hashtag, 40)
+        d = tweet.main(hashtag, 20)
         d["hashtag"] = "#" + str(hashtag)
         return jsonify(d)
 
