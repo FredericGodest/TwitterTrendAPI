@@ -12,7 +12,11 @@ api = Api(app)
 
 class GetTweet(Resource):
     def get(self, hashtag):
-        d = tweet.main(hashtag, 20)
+        if os.environ.get("ENV") == "PROD":
+            d = tweet.main(hashtag, 10)
+        else:
+            d = tweet.main(hashtag, 40)
+
         d["hashtag"] = "#" + str(hashtag)
         return jsonify(d)
 
