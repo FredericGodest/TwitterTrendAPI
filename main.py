@@ -3,7 +3,6 @@ from flask import Flask, jsonify
 from flask_restful import Resource, Api
 import os
 from flask_cors import CORS
-
 from dotenv import dotenv_values
 
 app = Flask(__name__)

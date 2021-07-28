@@ -8,10 +8,10 @@ import re
 import numpy as np
 import json
 import os
+import cProfile
 from dotenv import dotenv_values
 
 translator = Translator()
-
 
 def get_auth():
     # PROD MOD
@@ -69,6 +69,7 @@ def get_tweet(word, numberOfItem, api):
     RT = []
     ORIGIN = []
     POLARITY = []
+    ORIGIN_NAME = []
 
     tweets = tweepy.Cursor(api.search, q=word, lang="fr", tweet_mode='extended').items(numberOfItem)
 
@@ -79,13 +80,16 @@ def get_tweet(word, numberOfItem, api):
 
         if hasattr(tweet, 'retweeted_status'):
             origin = tweet.retweeted_status.author.screen_name
+            origin_name = tweet.retweeted_status.author.name
             favorite = tweet.retweeted_status.favorite_count
             tweet = str(tweet.retweeted_status.full_text)
 
         else:
             origin = str(tweet.author.screen_name)
+            origin_name = tweet.author.name
             favorite = tweet.favorite_count
             tweet = str(tweet.full_text)
+
 
 
         #Get it cleaned
@@ -105,16 +109,17 @@ def get_tweet(word, numberOfItem, api):
         ORIGIN.append(origin)
         FAV.append(int(favorite))
         TWEETS.append(str(tweet))
+        ORIGIN_NAME.append(str(origin_name))
 
 
     d = {"Username" : USER,
          "Origin" : ORIGIN,
+         "Origin Name" : ORIGIN_NAME,
          "Message" : TWEETS,
          "Creation Date": CREATION,
          "Favorite Number": FAV,
          "RT Number": RT,
          "Sentiment": POLARITY}
-
 
     data = pd.DataFrame(data = d).drop_duplicates("Message")
 
@@ -143,32 +148,35 @@ def remove_dark(df):
     return df
 
 def toJson(data):
-    RT = data["RT Number"].to_numpy()
-    FAV = data["Favorite Number"].to_numpy()
-    REACTION = RT + FAV
+    data["Reaction"] = data["RT Number"] + data["Favorite Number"]
     SCORE = data["Sentiment"].to_numpy()
-    data["Reaction"] = REACTION
+    REACTION = data["Reaction"].to_numpy()
 
     data = remove_dark(data)
-    data = data.sort_values(by='Reaction', ascending=False).head(1)
 
     RT = data["RT Number"].to_numpy()
     FAV = data["Favorite Number"].to_numpy()
-
-    best_account = str(data["Origin"].values[0])
-    best_tweet = str(data["Message"].values[0])
-    best_fav = int(data["Favorite Number"].values[0])
-    best_RT = int(data["RT Number"].values[0])
     max_fav = int(np.max(FAV))
     max_RT = int(np.max(RT))
     total_fav = int(np.sum(FAV))
     total_RT = int(np.sum(RT))
     final_score = float(np.average(SCORE, weights=REACTION))
 
+    data = data.sort_values(by='Reaction', ascending=False).head(1)
+    best_account = str(data["Origin"].values[0])
+    best_account_name = str(data["Origin Name"].values[0])
+    best_tweet = str(data["Message"].values[0])
+    best_fav = int(data["Favorite Number"].values[0])
+    best_RT = int(data["RT Number"].values[0])
+    best_sentiment = float(data["Sentiment"].values[0])
+
+
     d = {
         "best_account": best_account,
+        "best_account_name" : best_account_name,
         "best_tweet": best_tweet,
         "best_fav": best_fav,
+        "best_sentiment": best_sentiment,
         "best_RT": best_RT,
         "max_fav": max_fav,
         "max_RT": max_RT,
