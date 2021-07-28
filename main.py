@@ -12,7 +12,7 @@ api = Api(app)
 class GetTweet(Resource):
     def get(self, hashtag):
         if os.environ.get("ENV") == "PROD":
-            d = tweet.main(hashtag, 10)
+            d = tweet.main(hashtag, 40)
         else:
             d = tweet.main(hashtag, 40)
 

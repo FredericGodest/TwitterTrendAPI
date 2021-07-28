@@ -71,7 +71,9 @@ def get_tweet(word, numberOfItem, api):
     POLARITY = []
     ORIGIN_NAME = []
 
-    tweets = tweepy.Cursor(api.search, q=word, lang="fr", tweet_mode='extended').items(numberOfItem)
+    batch_size = 5
+
+    tweets = tweepy.Cursor(api.search, q=word, count=batch_size, lang="fr", tweet_mode='extended').items(numberOfItem)
 
     for tweet in tweets:
         CREATION.append(tweet.created_at.strftime('%d/%m/%Y'))
