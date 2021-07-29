@@ -1,3 +1,9 @@
+"""
+This module is compiling data from twitter API.
+The data is then cleaned and analysed.
+"""
+
+# librairies
 import tweepy
 import pandas as pd
 import datetime
@@ -8,12 +14,17 @@ import re
 import numpy as np
 import json
 import os
-import cProfile
 from dotenv import dotenv_values
 
+# Google translate object
 translator = Translator()
 
-def get_auth():
+
+def get_auth() -> object:
+    """
+    function to obtain credentials
+    :return: Twitter API credentials
+    """
     # PROD MOD
     if os.environ.get("ENV") == "PROD":
         consumer_key = os.environ.get("CONSUMER_KEY")
@@ -33,7 +44,12 @@ def get_auth():
 
     return api
 
-def get_cleaned(msg):
+def get_cleaned(msg : str) -> str:
+    """
+    This function use regex function to clean up a message.
+    :param: The given message (string)
+    :return: cleaned message (string)
+    """
     #remove # and @
     msg = re.sub("@[A-Za-z0-9_]+", "", msg)
     msg = msg.replace('#', '')
@@ -61,7 +77,17 @@ def get_cleaned(msg):
 
     return msg
 
-def get_tweet(word, numberOfItem, api):
+def get_tweet(word : str, item_number : int, api : object):
+    """
+    This function use the twitter API to find all the tweets related to a given hashtag.
+    :param word: the hashtag searched by the user
+    :param item_number: the numbers of tweets requested by the user
+    :param api: Twitter API credentials
+
+    :return data: a Pandas dataframe with a bunch of data.
+    """
+
+    #Variable Creation
     TWEETS = []
     USER = []
     CREATION = []
@@ -71,10 +97,10 @@ def get_tweet(word, numberOfItem, api):
     POLARITY = []
     ORIGIN_NAME = []
 
-    batch_size = 5
+    # Get tweets from API
+    tweets = tweepy.Cursor(api.search, q=word, lang="fr", tweet_mode='extended').items(item_number)
 
-    tweets = tweepy.Cursor(api.search, q=word, count=batch_size, lang="fr", tweet_mode='extended').items(numberOfItem)
-
+    # get data
     for tweet in tweets:
         CREATION.append(tweet.created_at.strftime('%d/%m/%Y'))
         RT.append(int(tweet.retweet_count))
@@ -106,14 +132,14 @@ def get_tweet(word, numberOfItem, api):
         polarity2 = TextBlob(msg, pos_tagger=PatternTagger(), analyzer=PatternAnalyzer()).sentiment #French Version
         polarity = (polarity1 + polarity2[0]) / 2
 
-
+        # Compile data in list
         POLARITY.append(polarity)
         ORIGIN.append(origin)
         FAV.append(int(favorite))
         TWEETS.append(str(tweet))
         ORIGIN_NAME.append(str(origin_name))
 
-
+    # Dictionnarie Creation
     d = {"Username" : USER,
          "Origin" : ORIGIN,
          "Origin Name" : ORIGIN_NAME,
@@ -123,11 +149,18 @@ def get_tweet(word, numberOfItem, api):
          "RT Number": RT,
          "Sentiment": POLARITY}
 
+    # Daframe Creation
     data = pd.DataFrame(data = d).drop_duplicates("Message")
 
     return data
 
 def remove_dark(df):
+    """
+    This function remove all the tweets which are not suitable for our application.
+    :param df: uncleaned dataframe
+    :return df: Clean dataframe
+    """
+    # Open the Black list
     file = open("blacklist.txt", "r")
     List = []
     for line in file:
@@ -150,6 +183,11 @@ def remove_dark(df):
     return df
 
 def toJson(data):
+    """
+    This function convert the pandas dataframe to a lighweight json object.
+    :param data: Pandas dataframe
+    :return d: Dataframe on Json format
+    """
     data["Reaction"] = data["RT Number"] + data["Favorite Number"]
     SCORE = data["Sentiment"].to_numpy()
     REACTION = data["Reaction"].to_numpy()
@@ -189,7 +227,13 @@ def toJson(data):
 
     return d
 
-def main(word, item_number):
+def main(word : str, item_number : int) -> object:
+    """
+    This is the main function that run all the functions above.
+    :param word: the hashtag searched by the user
+    :param item_number: the numbers of tweets requested by the user
+    :return d: json object
+    """
     word = word.replace('#', '')
     word = '#' + str(word)
     api = get_auth()
