@@ -6,18 +6,12 @@ The data is then cleaned and analysed.
 # librairies
 import tweepy
 import pandas as pd
-import datetime
-from textblob import TextBlob
-from textblob_fr import PatternTagger, PatternAnalyzer
-from googletrans import Translator
 import re
 import numpy as np
 import json
 import os
+from sentiment_analysis_torch import sentiment_analysis
 from dotenv import dotenv_values
-
-# Google translate object
-translator = Translator()
 
 
 def get_auth() -> object:
@@ -77,7 +71,7 @@ def get_cleaned(msg : str) -> str:
 
     return msg
 
-def get_tweet(word : str, item_number : int, api : object):
+def get_tweet(tokenizer, model, word : str, item_number : int, api : object) -> dict:
     """
     This function use the twitter API to find all the tweets related to a given hashtag.
     :param word: the hashtag searched by the user
@@ -90,7 +84,6 @@ def get_tweet(word : str, item_number : int, api : object):
     #Variable Creation
     TWEETS = []
     USER = []
-    CREATION = []
     FAV = []
     RT = []
     ORIGIN = []
@@ -102,7 +95,6 @@ def get_tweet(word : str, item_number : int, api : object):
 
     # get data
     for tweet in tweets:
-        CREATION.append(tweet.created_at.strftime('%d/%m/%Y'))
         RT.append(int(tweet.retweet_count))
         USER.append(str(tweet.user.screen_name))
 
@@ -123,14 +115,8 @@ def get_tweet(word : str, item_number : int, api : object):
         #Get it cleaned
         msg = get_cleaned(tweet)
 
-        #Translation
-        translated = translator.translate(msg, src="fr", dest="en")
-        translated = translated.text
-
         #sentiment analysis
-        polarity1 = TextBlob(translated).sentiment.polarity #English version
-        polarity2 = TextBlob(msg, pos_tagger=PatternTagger(), analyzer=PatternAnalyzer()).sentiment #French Version
-        polarity = (polarity1 + polarity2[0]) / 2
+        polarity = sentiment_analysis(tokenizer, model, msg)
 
         # Compile data in list
         POLARITY.append(polarity)
@@ -144,7 +130,6 @@ def get_tweet(word : str, item_number : int, api : object):
          "Origin" : ORIGIN,
          "Origin Name" : ORIGIN_NAME,
          "Message" : TWEETS,
-         "Creation Date": CREATION,
          "Favorite Number": FAV,
          "RT Number": RT,
          "Sentiment": POLARITY}
@@ -154,7 +139,7 @@ def get_tweet(word : str, item_number : int, api : object):
 
     return data
 
-def remove_dark(df):
+def remove_dark(df : dict) -> dict:
     """
     This function remove all the tweets which are not suitable for our application.
     :param df: uncleaned dataframe
@@ -182,7 +167,7 @@ def remove_dark(df):
 
     return df
 
-def toJson(data):
+def toJson(data : dict) -> dict:
     """
     This function convert the pandas dataframe to a lighweight json object.
     :param data: Pandas dataframe
@@ -200,8 +185,9 @@ def toJson(data):
     max_RT = int(np.max(RT))
     total_fav = int(np.sum(FAV))
     total_RT = int(np.sum(RT))
-    final_score = float(np.average(SCORE, weights=REACTION))
+    final_score = np.round(np.average(SCORE, weights=REACTION), 0)
 
+    #Getting best Tweet
     data = data.sort_values(by='Reaction', ascending=False).head(1)
     best_account = str(data["Origin"].values[0])
     best_account_name = str(data["Origin Name"].values[0])
@@ -227,7 +213,7 @@ def toJson(data):
 
     return d
 
-def main(word : str, item_number : int) -> object:
+def main(word : str,  tokenizer, model, item_number : int) -> dict:
     """
     This is the main function that run all the functions above.
     :param word: the hashtag searched by the user
@@ -237,7 +223,7 @@ def main(word : str, item_number : int) -> object:
     word = word.replace('#', '')
     word = '#' + str(word)
     api = get_auth()
-    data = get_tweet(word, item_number, api)
+    data = get_tweet(tokenizer, model, word, item_number, api)
     d = toJson(data)
 
     return d

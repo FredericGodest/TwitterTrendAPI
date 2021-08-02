@@ -5,6 +5,6 @@ twitterauth
 scorememory.csv
 word.csv
 test.py
-test2.py
+sentiment_analysis_torch.py
 scoreMemory.csv
 node_modules
