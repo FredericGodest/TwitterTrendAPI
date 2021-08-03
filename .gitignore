@@ -1,4 +1,4 @@
-venv
+/venv
 test.py
 tweet.json
 twitterauth
@@ -6,5 +6,5 @@ scorememory.csv
 word.csv
 test.py
 scoreMemory.csv
-node_modules
+/node_modules
 draft.py
