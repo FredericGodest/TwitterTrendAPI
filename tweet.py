@@ -12,7 +12,9 @@ import json
 import os
 from sentiment_analysis_torch import sentiment_analysis
 from dotenv import dotenv_values
+from googletrans import Translator
 
+translator = Translator()
 
 def get_auth() -> object:
     """
@@ -115,6 +117,9 @@ def get_tweet(tokenizer, model, word : str, item_number : int, api : object) -> 
         #Get it cleaned
         msg = get_cleaned(tweet)
 
+        #Translation to english
+        msg = translator.translate(msg, dest='en').text
+
         #sentiment analysis
         polarity = sentiment_analysis(tokenizer, model, msg)
 
@@ -185,7 +190,7 @@ def toJson(data : dict) -> dict:
     max_RT = int(np.max(RT))
     total_fav = int(np.sum(FAV))
     total_RT = int(np.sum(RT))
-    final_score = np.round(np.average(SCORE, weights=REACTION), 0)
+    final_score = float(np.average(SCORE, weights=REACTION))
 
     #Getting best Tweet
     data = data.sort_values(by='Reaction', ascending=False).head(1)

@@ -16,8 +16,9 @@ CORS(app)
 api = Api(app)
 
 # Initilisation des tokens hugging face
-tokenizer = AutoTokenizer.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
-model = AutoModelForSequenceClassification.from_pretrained("nlptown/bert-base-multilingual-uncased-sentiment")
+model_name = "distilbert-base-uncased-finetuned-sst-2-english"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
 
 class GetTweet(Resource):
     def get(self, hashtag : str) -> dict:
